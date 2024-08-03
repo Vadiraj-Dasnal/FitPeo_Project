@@ -1,0 +1,114 @@
+Assignment submission
+
+from selenium import webdriver
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.common.action_chains import ActionChains
+import time
+
+url = "https://fitpeo.com/"
+revenue_calculator = "//div[text()='Revenue Calculator']"
+calculator_slider="//span[contains(@class, 'MuiSlider-root')]"
+slider_point="//span[contains(@class, 'MuiSlider-thumb')]/input"
+slider_input_text_box="//input[contains(@class, 'MuiInputBase')]"
+close_company_msg = "//button[@aria-label='Close message from company']"
+reembursement_value = "//p[text()='Total Recurring Reimbursement for all Patients Per Month:']/p"
+
+""" Documentation: 
+Note:
+1. I have used time.sleep to show execution in detail
+2. Stored some locators in variables for reusability and maintanibility
+3. Used firefox browser for automating
+4. All the points are automated which are given in document
+
+Requirements:
+●   Use any web automation tool (e.g., Selenium WebDriver) and any programming language you are comfortable with (e.g., Java, Python, JavaScript).
+Ans: I have used selenium webdriver with python language
+●   The script should be well-documented and easy to understand.
+Ans: All the steps are written with comments for proper readiblity
+●   Handle possible exceptions and ensure the script runs smoothly.
+Ans: Scrolling is not working properly because of some javascript issues.
+
+Submission:
+●   Provide the source code of your automation script.
+Ans: Below is the source code of the script
+●   Include a brief document explaining how to set up and run your script.
+Ans: Selenium and python should be setup in local to run the scripts
+●   Ensure your script is runnable in a standard development environment with minimal setup.
+Ans: Script is runnable with minmal environment
+
+Additional Information:
+●   Make sure to test your script thoroughly before submission.
+Ans: Yes, it works fine
+●   Pay attention to the dynamic nature of web elements and ensure your script can handle such scenarios.
+Ans: Yes, it handles dynamic elements properly
+●   Ensure the script is maintainable and adheres to best coding practices.
+Ans: Yes, it is maintainable and follows best coding practices
+
+"""
+# 1.    Navigate to the FitPeo Homepage
+driver = webdriver.Firefox()
+driver.get(url)
+driver.maximize_window()
+print('Title is: ', driver.title)
+wait = WebDriverWait(driver, 10)
+wait.until(ec.visibility_of_element_located((By.XPATH, revenue_calculator)))
+
+# 2.    Navigate to the Revenue Calculator Page:
+driver.find_element(By.XPATH, revenue_calculator).click()
+# wait.until(ec.element_to_be_selected((By.XPATH, revenue_calculator)))
+wait.until(ec.url_contains(('revenue-calculator')))
+
+# 3.    Scroll Down to the Slider section:  I have used below scrolls for scrolling
+driver.execute_script('window.scrollTo(0, document.body.scrollheight);')
+
+# actions = ActionChains(driver)
+# actions.move_to_element("//p[text()='CPT-99091']").scroll(0, 1000).perform()
+
+# actions.scroll(0,10000)
+
+# 4.    Adjust the Slider:
+slider = driver.find_element(By.XPATH, slider_point)
+
+desired_value = 820
+current_value = int(slider.get_attribute("value"))
+print(current_value)
+
+max_value = 132
+slider_width = slider.size['width']
+
+# Calculating the pixel move
+move_by_pixels = (desired_value - current_value) * (slider_width / max_value)
+
+actions = ActionChains(driver)
+actions.click_and_hold(slider).move_by_offset(move_by_pixels, 10).release().perform()
+
+new_value = int(slider.get_attribute("value"))
+assert new_value == desired_value, f"Slider value is not set correctly: {new_value}"
+time.sleep(2)
+print(f'Revenue calculator slider is visible Upto {new_value}')
+
+# 5 and 6   Update the Text Field, Validate Slider Value:
+text_box = driver.find_element(By.XPATH, slider_input_text_box)
+current_value = text_box.get_attribute('value')
+print(f'The current input is: {current_value}')
+text_box.click()
+text_box.clear()
+driver.find_element(By.XPATH, slider_input_text_box).send_keys("560")
+time.sleep(2)
+current_value = text_box.get_attribute('value')
+print(f'updated value is: {current_value}')
+
+# 7 select CPT codes
+driver.find_element(By.XPATH, "(//input[@type='checkbox'])[1]").click()
+driver.find_element(By.XPATH, "(//input[@type='checkbox'])[2]").click()
+driver.find_element(By.XPATH, "(//input[@type='checkbox'])[3]").click()
+time.sleep(2)
+
+# 8 and 9 Validate total re-occuring embursement
+amount = driver.find_element(By.XPATH, reembursement_value)
+reembursement = amount.text
+print(f"Total reembursement amout is: {reembursement}")
+time.sleep(2)
+driver.close()
